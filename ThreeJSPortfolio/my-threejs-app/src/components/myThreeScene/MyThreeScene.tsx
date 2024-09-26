@@ -2,7 +2,15 @@
 
 import React, { useEffect, useRef } from "react";
 import * as THREE from "three";
-import { OBJLoader } from "three-stdlib";
+import { OrbitControls } from "three-stdlib";
+
+// Import utility functions
+import { createScene } from "../../utils/createScene";
+import { createCamera } from "../../utils/createCamera";
+import { createRenderer } from "../../utils/createRenderer";
+import { addLights } from "../../utils/addLights";
+import { loadModel } from "../../utils/loadModel";
+import { animationLoop } from "../../utils/animationLoop";
 
 const MyThreeScene: React.FC = () => {
   const mountRef = useRef<HTMLDivElement>(null);
@@ -10,68 +18,26 @@ const MyThreeScene: React.FC = () => {
   useEffect(() => {
     const currentMount = mountRef.current;
 
-    // Scene setup
-    const scene = new THREE.Scene();
+    // Create scene, camera, and renderer
+    const scene = createScene();
+    const camera = createCamera();
+    const renderer = createRenderer();
 
-    // Camera setup
-    const camera = new THREE.PerspectiveCamera(
-      75,
-      window.innerWidth / window.innerHeight,
-      0.1,
-      1000
-    );
-    camera.position.z = 5;
-
-    // Renderer setup
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    // Append renderer to DOM
     currentMount?.appendChild(renderer.domElement);
 
-    // Lighting
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-    scene.add(ambientLight);
+    // Add lights to the scene
+    addLights(scene);
 
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-    directionalLight.position.set(0, 1, 1);
-    scene.add(directionalLight);
+    // Load the model
+    loadModel(scene);
 
-    // Load the texture
-    const textureLoader = new THREE.TextureLoader();
-    const texture = textureLoader.load("/textures/Corgi_Base_color.png");
+    // Optional: Add OrbitControls
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
 
-    // Load the OBJ model
-    const objLoader = new OBJLoader();
-    objLoader.load(
-      "/models/chris-corgi.obj",
-      (object) => {
-        object.traverse((child) => {
-          if ((child as THREE.Mesh).isMesh) {
-            const mesh = child as THREE.Mesh;
-            mesh.material = new THREE.MeshStandardMaterial({ map: texture });
-          }
-        });
-
-        // Optionally center the model
-        const box = new THREE.Box3().setFromObject(object);
-        const center = box.getCenter(new THREE.Vector3());
-        object.position.sub(center);
-
-        scene.add(object);
-      },
-      (xhr) => {
-        console.log((xhr.loaded / xhr.total) * 100 + "% loaded");
-      },
-      (error) => {
-        console.error("An error occurred while loading the OBJ file", error);
-      }
-    );
-
-    // Animation loop
-    const animate = () => {
-      requestAnimationFrame(animate);
-      renderer.render(scene, camera);
-    };
-    animate();
+    // Start animation loop
+    animationLoop(renderer, scene, camera, controls);
 
     // Handle window resize
     const handleResize = () => {
@@ -85,6 +51,9 @@ const MyThreeScene: React.FC = () => {
     return () => {
       currentMount?.removeChild(renderer.domElement);
       window.removeEventListener("resize", handleResize);
+
+      // Dispose of renderer
+      renderer.dispose();
     };
   }, []);
 
