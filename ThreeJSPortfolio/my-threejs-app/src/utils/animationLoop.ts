@@ -10,7 +10,6 @@ export function animationLoop(
   const animate = () => {
     requestAnimationFrame(animate);
 
-    // Update controls if they exist
     if (controls) {
       controls.update();
     }

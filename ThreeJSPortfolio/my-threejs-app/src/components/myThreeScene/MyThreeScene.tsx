@@ -1,7 +1,6 @@
 // src/components/MyThreeScene.tsx
 
 import React, { useEffect, useRef } from "react";
-import * as THREE from "three";
 import { OrbitControls } from "three-stdlib";
 
 // Import utility functions
@@ -18,28 +17,21 @@ const MyThreeScene: React.FC = () => {
   useEffect(() => {
     const currentMount = mountRef.current;
 
-    // Create scene, camera, and renderer
     const scene = createScene();
     const camera = createCamera();
     const renderer = createRenderer();
 
-    // Append renderer to DOM
     currentMount?.appendChild(renderer.domElement);
 
-    // Add lights to the scene
     addLights(scene);
 
-    // Load the model
     loadModel(scene);
 
-    // Optional: Add OrbitControls
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
 
-    // Start animation loop
     animationLoop(renderer, scene, camera, controls);
 
-    // Handle window resize
     const handleResize = () => {
       renderer.setSize(window.innerWidth, window.innerHeight);
       camera.aspect = window.innerWidth / window.innerHeight;
@@ -47,12 +39,10 @@ const MyThreeScene: React.FC = () => {
     };
     window.addEventListener("resize", handleResize);
 
-    // Cleanup on unmount
     return () => {
       currentMount?.removeChild(renderer.domElement);
       window.removeEventListener("resize", handleResize);
 
-      // Dispose of renderer
       renderer.dispose();
     };
   }, []);
