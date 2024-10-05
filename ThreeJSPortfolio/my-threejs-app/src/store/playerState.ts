@@ -1,23 +1,25 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
+export type AnimationName = "Idle" | "Walk" | "Run" | "Jump";
+
 interface PlayerState {
-  status: string;
+  state: AnimationName;
 }
 
 const initialState: PlayerState = {
-  status: "idle",
+  state: "Idle",
 };
 
 const playerSlice = createSlice({
   name: "player",
   initialState,
   reducers: {
-    setStatus: (state, action: PayloadAction<string>) => {
-      state.status = action.payload;
+    setPlayerState: (state, action: PayloadAction<AnimationName>) => {
+      state.state = action.payload;
     },
   },
 });
 
-export const { setStatus } = playerSlice.actions;
+export const { setPlayerState } = playerSlice.actions;
 
 export default playerSlice.reducer;
