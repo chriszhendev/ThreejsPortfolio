@@ -32,7 +32,7 @@ export function loadModel(scene: THREE.Scene): Promise<ModelLoadResult> {
     scene.background = envMap;
 
     const loader = new GLTFLoader();
-    const modelPath = "models/doggo15.glb";
+    const modelPath = "models/doggo23.glb";
 
     loader.load(
       modelPath,
@@ -47,6 +47,7 @@ export function loadModel(scene: THREE.Scene): Promise<ModelLoadResult> {
 
         gltf.animations.forEach((clip) => {
           const action = mixer.clipAction(clip);
+          console.log("CLIP NAME: ", clip.name);
           actions[clip.name] = action;
         });
 

@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-export type AnimationName = "Idle" | "Walk" | "Run" | "Jump";
+export type AnimationName = "Idle" | "Work" | "Projects" | "About" | "Contact";
 
 interface PlayerState {
   state: AnimationName;
