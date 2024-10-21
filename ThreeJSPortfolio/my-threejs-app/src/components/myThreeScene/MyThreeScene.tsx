@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { OrbitControls } from "three-stdlib";
 import { RootState } from "../../store/store";
 import { useSelector, useDispatch } from "react-redux";
@@ -12,29 +12,32 @@ import { addLights } from "../../utils/addLights";
 import { loadModel } from "../../utils/loadModel";
 import { animationLoop } from "../../utils/animationLoop";
 import { playAnimation, playAnimationOnce } from "../../utils/playAnimation";
-import { setPlayerState } from "../../store/playerState";
+import { setCurrentAnimation, setPlayerState } from "../../store/playerState";
 
 const MyThreeScene: React.FC = () => {
   const mountRef = useRef<HTMLDivElement>(null);
   const mixerRef = useRef<THREE.AnimationMixer | null>(null);
   const actionsRef = useRef<{ [name: string]: THREE.AnimationAction }>({});
   const playerState = useSelector((state: RootState) => state.player.state);
+  const [currentAnimation, setCurrentAnimation] = useState<AnimationName>(
+    AnimationName.Idle
+  );
   const initialPlayerStateRef = useRef(playerState);
   const dispatch = useDispatch();
 
-  async function playFollowUpAnimation(
-    state1: AnimationName,
-    state2: AnimationName
-  ) {
-    try {
-      if (actionsRef.current && mixerRef.current) {
-        await playAnimationOnce(state1, actionsRef.current, mixerRef.current);
-        playAnimation(state2, actionsRef.current);
-      }
-    } catch (error) {
-      console.error("Error playing animations:", error);
-    }
-  }
+  // async function playFollowUpAnimation(
+  //   state1: AnimationName,
+  //   state2: AnimationName
+  // ) {
+  //   try {
+  //     if (actionsRef.current && mixerRef.current) {
+  //       await playAnimationOnce(state1, actionsRef.current, mixerRef.current);
+  //       playAnimation(state2, actionsRef.current);
+  //     }
+  //   } catch (error) {
+  //     console.error("Error playing animations:", error);
+  //   }
+  // }
 
   useEffect(() => {
     const currentMount = mountRef.current;
@@ -77,51 +80,24 @@ const MyThreeScene: React.FC = () => {
     };
   }, []);
 
-  // useEffect(() => {
-  //   const handleKeyDown = (event: KeyboardEvent) => {
-  //     if (event.key === "a" || event.key === "A") {
-  //       dispatch(setPlayerState("Idle"));
-  //       console.log("A!");
-  //     } else if (event.key === "s" || event.key === "S") {
-  //       dispatch(setPlayerState("Walk"));
-  //       console.log("S!");
-  //     }
-  //   };
-
-  //   window.addEventListener("keydown", handleKeyDown);
-
-  //   return () => {
-  //     window.removeEventListener("keydown", handleKeyDown);
-  //   };
-  // }, [dispatch]);
-
   useEffect(() => {
     console.log(playerState);
-    if (mixerRef.current && actionsRef.current && playerState) {
-      console.log("Playing animation for state:", playerState);
+    console.log(currentAnimation);
 
-      switch (playerState) {
-        case "Idle":
-          playAnimation(playerState, actionsRef.current);
-          break;
-        case "Work":
-          playFollowUpAnimation("Work", "Work2");
-          break;
-        case "About":
-          playAnimation(playerState, actionsRef.current);
-          break;
-        case "Contact":
-          playAnimation(playerState, actionsRef.current);
-          break;
-        case "Projects":
-          playAnimation(playerState, actionsRef.current);
-          break;
-
-        default:
-          break;
+    const runAnimations = async () => {
+      if (mixerRef.current && actionsRef.current && playerState) {
+        //plays the exit animation for previous state if it has one
+        await playExitAnimation(currentAnimation);
+        //play start animation for current state if it has one
+        await playEnterAnimation(playerState);
+        //play the loop animation if it has one
+        playAnimationLoop(playerState);
+        setCurrentAnimation();
       }
-    }
-  }, [playerState]);
+    };
+
+    runAnimations();
+  }, [playerState]); // Only playerState is in the dependency array
 
   return (
     <div
